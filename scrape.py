@@ -1,5 +1,11 @@
-import requests, re, time
+import requests, re, time, sys
 import pandas as pd
+
+out_file = "holidays.csv"
+out_date_format = "%Y-%m-%d"
+
+if len(sys.argv) == 3:
+    out_file, out_date_format = sys.argv[1:]
 
 r = requests.get("https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/#url=Historical-Data")
 r.raise_for_status()
@@ -24,8 +30,8 @@ for table in re.findall(r'<table class="DataTable HolidayTable">([\s\S]*?)</tabl
                 continue # this table specified for a different year
             date = row[0].split(", ")[1] + ", " + year
             date = time.strptime(date, "%B %d, %Y")
-            row[0] = time.strftime("%Y-%m-%d", date)
+            row[0] = time.strftime(out_date_format, date)
             rows.append(row)
-            
+
 df = pd.DataFrame(rows, columns=["date", "holiday"])
-df.sort_values(by="date").to_csv("holidays.csv", index=False)
+df.sort_values(by="date").to_csv(out_file, index=False)
